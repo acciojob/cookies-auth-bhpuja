@@ -3,135 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cookie Authentication</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      border-radius: 5px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .logout-btn {
-      background-color: #f44336;
-    }
-    .logout-btn:hover {
-      background-color: #da190b;
-    }
-  </style>
+  <title>Cookies Auth Example</title>
 </head>
 <body>
 
-  <div class="container">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <div class="form-group">
-        <input type="text" id="username" placeholder="Username" required>
-      </div>
-      <div class="form-group">
-        <input type="password" id="password" placeholder="Password" required>
-      </div>
+  <h2>Login</h2>
+
+  <!-- Login Form -->
+  <div id="login-form" style="display: none;">
+    <form onsubmit="login(event)">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required><br><br>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required><br><br>
       <button type="submit">Login</button>
     </form>
+  </div>
 
-    <div id="welcomeMessage" style="display: none;">
-      <h2>Welcome <span id="userNameDisplay"></span></h2>
-      <button id="logoutButton" class="logout-btn">Logout</button>
-    </div>
+  <!-- Welcome Message -->
+  <div id="welcome-message" style="display: none;">
+    <p>Welcome <span id="username-display"></span>!</p>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <script>
-    // Function to set a cookie
+    // Check if user is already logged in by checking the cookie
+    window.onload = function() {
+      let username = getCookie('username');
+      if (username) {
+        // If the user is logged in, show the welcome message
+        document.getElementById('welcome-message').style.display = 'block';
+        document.getElementById('username-display').textContent = username;
+      } else {
+        // If not logged in, show the login form
+        document.getElementById('login-form').style.display = 'block';
+      }
+    };
+
+    // Function to log in the user and store the username in a cookie
+    function login(event) {
+      event.preventDefault(); // Prevent form submission
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      // Here we just simulate a successful login, you could add real authentication
+      if (username && password) {
+        setCookie('username', username, 7); // Store the username in a cookie for 7 days
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('welcome-message').style.display = 'block';
+        document.getElementById('username-display').textContent = username;
+      }
+    }
+
+    // Function to log out the user and remove the cookie
+    function logout() {
+      deleteCookie('username');
+      document.getElementById('login-form').style.display = 'block';
+      document.getElementById('welcome-message').style.display = 'none';
+    }
+
+    // Utility function to set a cookie
     function setCookie(name, value, days) {
-      const d = new Date();
-      d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-      const expires = "expires=" + d.toUTCString();
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      const expires = "expires=" + date.toUTCString();
       document.cookie = name + "=" + value + ";" + expires + ";path=/";
     }
 
-    // Function to get a cookie value by name
+    // Utility function to get a cookie by name
     function getCookie(name) {
-      const nameEq = name + "=";
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        let c = cookies[i];
-        while (c.charAt(0) == ' ') {
-          c = c.substring(1, c.length);
-        }
-        if (c.indexOf(nameEq) == 0) {
-          return c.substring(nameEq.length, c.length);
+      const decodedCookies = decodeURIComponent(document.cookie);
+      const cookiesArr = decodedCookies.split(';');
+      for (let i = 0; i < cookiesArr.length; i++) {
+        let cookie = cookiesArr[i].trim();
+        if (cookie.indexOf(name + "=") === 0) {
+          return cookie.substring(name.length + 1, cookie.length);
         }
       }
       return "";
     }
 
-    // Function to check if the user is logged in
-    function checkLoginStatus() {
-      const username = getCookie("username");
-      if (username) {
-        document.getElementById("welcomeMessage").style.display = "block";
-        document.getElementById("userNameDisplay").textContent = username;
-        document.getElementById("loginForm").style.display = "none";
-      } else {
-        document.getElementById("loginForm").style.display = "block";
-        document.getElementById("welcomeMessage").style.display = "none";
-      }
+    // Utility function to delete a cookie
+    function deleteCookie(name) {
+      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
     }
-
-    // Handle login form submission
-    document.getElementById("loginForm").addEventListener("submit", function (e) {
-      e.preventDefault();
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      // In a real application, you'd validate username and password here
-      if (username && password) {
-        // Store the username in cookies for 7 days
-        setCookie("username", username, 7);
-        checkLoginStatus();
-      } else {
-        alert("Please enter valid login credentials.");
-      }
-    });
-
-    // Handle logout
-    document.getElementById("logoutButton").addEventListener("click", function () {
-      // Delete the username cookie
-      document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-      checkLoginStatus();
-    });
-
-    // Check login status when the page loads
-    checkLoginStatus();
   </script>
 
 </body>
